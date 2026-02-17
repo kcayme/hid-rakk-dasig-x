@@ -1,0 +1,26 @@
+# Kernel build artifacts
+*.o
+*.ko
+*.ko.zst
+*.mod
+*.mod.c
+*.mod.o
+modules.order
+Module.symvers
+
+# Build command metadata
+*.o.cmd
+*.ko.cmd
+*.mod.cmd
+*.mod.o.cmd
+.modules.order.cmd
+.Module.symvers.cmd
+.module-common.o
+.cache/
+.tmp_versions/
+
+# Test binaries
+tests/test_hid_rakk_dasig_x
+
+# Editor/IDE
+compile_commands.json
