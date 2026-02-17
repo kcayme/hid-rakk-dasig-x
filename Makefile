@@ -26,3 +26,20 @@ install:
 uninstall:
 	rm -f $(MODULE_INSTALL_DIR)/hid-rakk-dasig-x.ko.zst
 	depmod -a
+
+DKMS_NAME := hid-rakk-dasig-x
+DKMS_VERSION := 1.0.0
+DKMS_SRC := /usr/src/$(DKMS_NAME)-$(DKMS_VERSION)
+
+dkms-install:
+	mkdir -p $(DKMS_SRC)
+	cp -r src/ $(DKMS_SRC)/
+	cp Makefile $(DKMS_SRC)/
+	cp dkms.conf $(DKMS_SRC)/
+	dkms add $(DKMS_NAME)/$(DKMS_VERSION)
+	dkms build $(DKMS_NAME)/$(DKMS_VERSION)
+	dkms install $(DKMS_NAME)/$(DKMS_VERSION)
+
+dkms-uninstall:
+	dkms remove $(DKMS_NAME)/$(DKMS_VERSION) --all
+	rm -rf $(DKMS_SRC)

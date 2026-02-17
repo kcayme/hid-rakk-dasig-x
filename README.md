@@ -130,7 +130,36 @@ sudo rmmod hid_rakk_dasig_x
 
 ## Installing (Permanent)
 
-Once testing confirms the side buttons work:
+Once testing confirms the side buttons work, choose one of the two methods:
+
+### Option A: DKMS (Recommended)
+
+DKMS automatically rebuilds the module whenever a new kernel is installed. No manual intervention needed after setup.
+
+Install DKMS if you don't have it:
+
+| Distro | Install command |
+|---|---|
+| Fedora / Nobara / Bazzite | `sudo dnf install dkms` |
+| Ubuntu / Mint | `sudo apt install dkms` |
+| Arch / CachyOS | `sudo pacman -S dkms` |
+
+Then install the module:
+
+```bash
+sudo make dkms-install
+```
+
+After installing, reconnect the mouse (or reboot) for the driver to take effect.
+
+To uninstall:
+
+```bash
+sudo rmmod hid_rakk_dasig_x
+sudo make dkms-uninstall
+```
+
+### Option B: Manual install
 
 ```bash
 sudo make install
@@ -140,16 +169,14 @@ This copies the compressed module to `/lib/modules/$(uname -r)/kernel/drivers/hi
 
 After installing, reconnect the mouse (or reboot) for the driver to take effect.
 
-## Uninstalling
+To uninstall:
 
 ```bash
-sudo rmmod hid_rakk_dasig_x    # unload from memory
-sudo make uninstall              # remove from disk
+sudo rmmod hid_rakk_dasig_x
+sudo make uninstall
 ```
 
-## Rebuilding After Kernel Updates
-
-The module is compiled against your current kernel. After a kernel update, you must rebuild and reinstall:
+**Note:** With manual install, you must rebuild and reinstall after every kernel update:
 
 ```bash
 make clean
@@ -182,7 +209,8 @@ The vendor ID `0x248A` is shared by multiple Telink-based devices. This driver o
 ### File Structure
 
 ```
-├── Makefile                          # Build, test, install, uninstall targets
+├── Makefile                          # Build, test, install, uninstall, dkms targets
+├── dkms.conf                         # DKMS configuration for auto-rebuild on kernel updates
 ├── README.md                         # This file
 ├── src/
 │   └── hid-rakk-dasig-x.c           # Driver source
