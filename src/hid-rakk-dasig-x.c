@@ -8,7 +8,6 @@
  * (buttons 4 and 5). This driver fixes the descriptor so all 5 buttons
  * are properly recognized.
  *
- * Based on hid-rakk-bulus by Carl Eric Doromal.
  */
 
 #include <linux/hid.h>
