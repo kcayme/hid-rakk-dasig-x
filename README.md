@@ -16,9 +16,7 @@ The kernel trusts the descriptor and ignores bits 4 and 5, so the side buttons p
 
 ## How the Fix Works
 
-The driver registers a `report_fixup` callback with the HID subsystem. When the kernel loads the mouse, it calls this function *before* parsing the descriptor. The driver patches a single byte at offset 17, changing `USAGE_MAXIMUM` from `0x03` to `0x05`, which tells the kernel to recognize all 5 buttons.
-
-Unlike the Rakk Bulus driver (which replaces the entire descriptor), this driver patches in-place, preserving all other HID collections the mouse exposes (consumer control, system control, keyboard).
+The driver registers a `report_fixup` callback with the HID subsystem. When the kernel loads the mouse, it calls this function *before* parsing the descriptor. The driver patches a single byte at offset 17, changing `USAGE_MAXIMUM` from `0x03` to `0x05`, which tells the kernel to recognize all 5 buttons. This driver patches in-place, preserving all other HID collections the mouse exposes (consumer control, system control, keyboard).
 
 ## Supported Connection Modes
 
@@ -45,10 +43,64 @@ All three have the same bug at the same byte offset (17) and are fixed by the sa
 
 ### Secure Boot
 
-If your system has Secure Boot enabled (common on Ubuntu), unsigned kernel modules will be rejected. You must either:
+If your system has Secure Boot enabled, unsigned kernel modules will be rejected. You must either:
 
 - **Sign the module** with a MOK (Machine Owner Key) — see your distro's documentation for enrolling a key with `mokutil`
 - **Disable Secure Boot** in your BIOS/UEFI settings
+
+## Installation
+
+### Option A: DKMS (Recommended)
+
+DKMS automatically rebuilds the module whenever a new kernel is installed. No manual intervention needed after setup.
+
+Install DKMS if you don't have it:
+
+| Distro | Install command |
+|---|---|
+| Fedora / Nobara / Bazzite | `sudo dnf install dkms` |
+| Ubuntu / Mint | `sudo apt install dkms` |
+| Arch / CachyOS | `sudo pacman -S dkms` |
+
+Then install the module:
+
+```bash
+sudo make dkms-install
+```
+
+After installing, reconnect the mouse (or reboot) for the driver to take effect.
+
+To uninstall:
+
+```bash
+sudo rmmod hid_rakk_dasig_x
+sudo make dkms-uninstall
+```
+
+### Option B: Manual install
+
+```bash
+sudo make install
+```
+
+This copies the compressed module to `/lib/modules/$(uname -r)/kernel/drivers/hid/` and runs `depmod -a` so the module auto-loads whenever the mouse is connected.
+
+After installing, reconnect the mouse (or reboot) for the driver to take effect.
+
+To uninstall:
+
+```bash
+sudo rmmod hid_rakk_dasig_x
+sudo make uninstall
+```
+
+**Note:** With manual install, you must rebuild and reinstall after every kernel update:
+
+```bash
+make clean
+make
+sudo make install
+```
 
 ## Building
 
@@ -128,62 +180,6 @@ Select the mouse entry (e.g. "Telink Wireless Gaming Mouse", "Telink Wireless Re
 sudo rmmod hid_rakk_dasig_x
 ```
 
-## Installing (Permanent)
-
-Once testing confirms the side buttons work, choose one of the two methods:
-
-### Option A: DKMS (Recommended)
-
-DKMS automatically rebuilds the module whenever a new kernel is installed. No manual intervention needed after setup.
-
-Install DKMS if you don't have it:
-
-| Distro | Install command |
-|---|---|
-| Fedora / Nobara / Bazzite | `sudo dnf install dkms` |
-| Ubuntu / Mint | `sudo apt install dkms` |
-| Arch / CachyOS | `sudo pacman -S dkms` |
-
-Then install the module:
-
-```bash
-sudo make dkms-install
-```
-
-After installing, reconnect the mouse (or reboot) for the driver to take effect.
-
-To uninstall:
-
-```bash
-sudo rmmod hid_rakk_dasig_x
-sudo make dkms-uninstall
-```
-
-### Option B: Manual install
-
-```bash
-sudo make install
-```
-
-This copies the compressed module to `/lib/modules/$(uname -r)/kernel/drivers/hid/` and runs `depmod -a` so the module auto-loads whenever the mouse is connected.
-
-After installing, reconnect the mouse (or reboot) for the driver to take effect.
-
-To uninstall:
-
-```bash
-sudo rmmod hid_rakk_dasig_x
-sudo make uninstall
-```
-
-**Note:** With manual install, you must rebuild and reinstall after every kernel update:
-
-```bash
-make clean
-make
-sudo make install
-```
-
 ## Compatibility
 
 Tested on:
@@ -206,28 +202,12 @@ The vendor ID `0x248A` is shared by multiple Telink-based devices. This driver o
 | Patched byte value | `0x03` → `0x05` |
 | Kernel API | `hid_driver.report_fixup` |
 
-### File Structure
-
-```
-├── Makefile                          # Build, test, install, uninstall, dkms targets
-├── dkms.conf                         # DKMS configuration for auto-rebuild on kernel updates
-├── README.md                         # This file
-├── src/
-│   └── hid-rakk-dasig-x.c           # Driver source
-└── tests/
-    └── test_hid_rakk_dasig_x.c      # Userspace unit tests
-```
-
 ## References
 
 - [RAKK Dasig X](https://rakk.ph/product/rakk-dasig-x-ambidextrous-hotswap-trimode-paw3325-huano-80m-rgb-gaming-mouse-black/) — Official product page
 - [hid-rakk-bulus](https://github.com/cedoromal/hid-rakk-bulus) — Reference HID driver for the Rakk Bulus (same class of bug)
 - [Linux HID report_fixup API](https://www.kernel.org/doc/html/latest/hid/hid-transport.html) — Kernel documentation on HID report descriptor fixups
 - [HID Usage Tables (USB-IF)](https://usb.org/document-library/hid-usage-tables-16) — USB HID usage table specification
-
-## Credits
-
-Based on [hid-rakk-bulus](https://github.com/cedoromal/hid-rakk-bulus).
 
 ## License
 
